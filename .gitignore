@@ -1,0 +1,12 @@
+
+*.xml
+
+*.iml
+
+*.sbt
+
+*.properties
+
+project/
+
+target/
