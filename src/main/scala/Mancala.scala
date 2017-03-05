@@ -5,17 +5,10 @@ object Mancala extends App{
   case class Board(status: String = "0 4 4 4 4 4 4 4 0; 0 4 4 4 4 4 4 4 0") {
     var rows = status.split(";")
     val colSize = rows(0).split(" ").length
-
     var board = Array.ofDim[Int](2, colSize)
+    for( i<- 0 to 1)  board(i) = rows(i).trim.split(" ").map(x => x.toInt)
 
-    for( i<- 0 to 1) {
-      board(i) = rows(i).trim.split(" ").map(x => x.toInt)
-    }
-
-    def printBoard = {
-      println(board.deep.mkString("\n"))
-    }
-
+    def printBoard = println(board.deep.mkString("\n"))
     def move(playerID: Int, pitID: Int): Boolean = {
       var stones = board(playerID)(pitID)
       val numPits = colSize*2-2
@@ -57,9 +50,7 @@ object Mancala extends App{
       ( playerID == 1 && curPit == colSize-1 || playerID == 0 && curPit == 0 )  //whether to do a next move
     }
     def allEmpty(playerID: Int): Boolean = board(playerID).forall( x => x == 0)
-    def eval(playerID: Int): Int = {
-      if( playerID == 1) (board(playerID)(colSize-1) - board(0)(0)) else (board(0)(0) - board(playerID)(colSize-1))
-    }
+    def eval(playerID: Int): Int = if( playerID == 1) (board(playerID)(colSize-1) - board(0)(0)) else (board(0)(0) - board(playerID)(colSize-1))
 
     override def toString: String = board(0).mkString(" ")+"; "+board(1).mkString(" ")
   }
@@ -69,6 +60,8 @@ object Mancala extends App{
     var this.curDepth = curDepth
     var this.name = name
     var this.playerID = playerID
+    var alpha = Integer.MIN_VALUE
+    var beta = Integer.MAX_VALUE
     var otherPlayer = if( playerID == 0) 1 else 0
     var bestResult: Board = b
 /*
@@ -97,10 +90,8 @@ object Mancala extends App{
   }
   def collectStones(playerID: Int, b: Board): Board = {
     for(i <- 1 until b.colSize-1) {
-      if( playerID == 0)
-        b.board(0)(0) += b.board(0)(i)
-      else
-        b.board(1)(b.colSize-1) += b.board(0)(i)
+      if( playerID == 0)  b.board(0)(0) += b.board(0)(i)
+      else  b.board(1)(b.colSize-1) += b.board(0)(i)
       b.board(0)(i) = 0
     }
     b
@@ -126,7 +117,7 @@ object Mancala extends App{
     }
     maxBoard.get
   }
-  def playMiniMax(status: Node, depth: Int, extra: Boolean): Node = {
+  def playMiniMax(status: Node, depth: Int, extra: Boolean, pruning: Boolean): Node = {
     //status is choosing among all possible outcomes of next (other player) round
     val playerID = status.playerID
     val otherPlayer = if(playerID == 0) 1 else 0
@@ -151,7 +142,7 @@ object Mancala extends App{
             curStatus.updateScoreTemp(tempScore)
             println(curStatus.logString)
           }
-          if(again || depth != curStatus.curDepth) curStatus = playMiniMax(curStatus, depth, again)
+          if(again || depth != curStatus.curDepth) curStatus = playMiniMax(curStatus, depth, again, pruning)
         }
         else {
           curStatus = curStatus.copy(b = collectStones(otherPlayer, curStatus.board) )
@@ -170,7 +161,7 @@ object Mancala extends App{
     status.board = status.bestResult
     status
   }
-  val playerID = 1
+  val playerID = 0
   val otherPlayer = if(playerID == 0) 1 else 0
   var myBoard = Board("0 2 2 2 0; 0 2 2 2 0")
   //var myBoard = Board("0 3 3 3 0; 0 3 3 3 0")
@@ -183,7 +174,7 @@ object Mancala extends App{
       myBoard = playGreedy(0, myBoard)
       myBoard.printBoard */
     var root = Node(playerID = playerID, maxNode = true, name = "root", myBoard, curDepth = 0)  //root is player 0, next round should be player 1
-    var output = playMiniMax(root, depth = 2, extra = false)
+    var output = playMiniMax(root, depth = 2, extra = false, pruning = false)
 
     output.bestResult.printBoard
   }
