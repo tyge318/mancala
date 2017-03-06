@@ -93,6 +93,7 @@ object Mancala extends App{
       var beta = bt
       var otherPlayer = if( playerID == 0) 1 else 0
       var bestResult: Board = b
+      var movePath: String = this.name
 
       def evalScore: Int = board.eval(rootPlayer)
       def updateScoreTemp(newScore: Int):Unit = {
@@ -100,11 +101,13 @@ object Mancala extends App{
           score = newScore
         }
       }
-      def updateScore(newScore: Int, pruning: Boolean, newBoard: Board, updateBoard: Boolean): Int = {
+      def updateScore(newScore: Int, pruning: Boolean, nextStatus: Node, updateBoard: Boolean): Int = {
         if(maxNode && newScore > score || !maxNode && newScore < score) {
           score = newScore
-          if (updateBoard)
-            bestResult = Board(newBoard.toString)
+          if (updateBoard) {
+            bestResult = Board(nextStatus.board.toString)
+            movePath = movePath + "=>" + nextStatus.movePath
+          }
         }
         score
       }
@@ -168,7 +171,7 @@ object Mancala extends App{
           }
 
           var score = if(!again && depth == curStatus.curDepth || endGame ) curStatus.evalScore else curStatus.score
-          score = curStatus.updateScore(score, pruning, curStatus.board, true)
+          score = curStatus.updateScore(score, pruning, curStatus, true)
           val resolveLog = curStatus.logString(pruning)
           if( (depth == curStatus.curDepth && !again) || endGame) {
             //println(resolveLog)
@@ -176,7 +179,7 @@ object Mancala extends App{
           }
           curStatus.updateAlphaBeta(score, pruning, (!again && depth == curStatus.curDepth || endGame))
           val updateBoard = (status.curDepth <= 1 && curStatus.curDepth <= 1 )
-          status.updateScore(score, pruning, curStatus.board, updateBoard)
+          status.updateScore(score, pruning, curStatus, updateBoard)
           //println(status.logString(pruning))
           logBuf ++= (status.logString(pruning) + "\n")
           status.updateAlphaBeta(score, pruning, false)
@@ -192,7 +195,7 @@ object Mancala extends App{
     var output = playMiniMax(root, depth = (if(mode.equals("1")) 1 else depth), extra = false, pruning = pruning)
 
     val outputState = output.bestResult.getState
-    outputState ::: List(logBuf.toString)
+    outputState ::: List(output.movePath, logBuf.toString)
   }
 
   val out = runMancala("2", "1", "2", "3 3 3", "3 3 3", "0", "0")
