@@ -107,7 +107,7 @@ object Mancala extends App{
           score = newScore
           if (updateBoard) {
             bestResult = Board(nextStatus.board.toString)
-            movePath = movePath + "=>" + nextStatus.movePath
+            movePath = this.name + "=>" + nextStatus.movePath
           }
         }
         score
@@ -207,8 +207,9 @@ object Mancala extends App{
     val outputState = myBoard.getState
     outputState ::: List(again.toString)
   }
+  val out = runMancala("2", "1", "2", "5 5 0 5 5 5", "5 4 0 5 0 6", "1", "2")
   //val out = runMancala("2", "1", "2", "3 3 3", "3 3 3", "0", "0")
-  //out.foreach(println(_))
-  val test = makeMove("3 3 3", "3 3 3", "0", "0", "B2")
-  test.foreach(println(_))
+  out.foreach(println(_))
+  //val test = makeMove("3 3 3", "3 3 3", "0", "0", "B2")
+  //test.foreach(println(_))
 }
